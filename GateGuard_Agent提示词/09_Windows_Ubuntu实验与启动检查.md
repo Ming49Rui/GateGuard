@@ -1,12 +1,12 @@
 # Windows VS Code 与 Ubuntu 实验约定
 
-版本 3.0。目标是保持 Windows 开发习惯，先在 Ubuntu 验证 Linux 能力，再验证 openEuler。这里只提供后续实施步骤，文档更新不会自动安装软件、启动 VM 或修改内核。
+文档版本 3.1，2026-11-24。目标是保持 Windows 开发习惯，先在 Ubuntu 验证 Linux 能力，再验证 openEuler。这里只提供后续实施步骤，文档更新不会自动安装软件、启动 VM 或修改内核。
 
 ## 推荐环境
 
 Windows 安装 VS Code、Python 扩展、Remote-SSH 和独立 Python 3.12。Ubuntu 24.04 LTS 虚拟机建立独立 Python 3.12 venv，安装按实际版本固定的 Git、OpenSSH、clang/LLVM、libbpf、bpftool、编译依赖和 btrfs-progs。具体包名、内核和版本由 A/C 在 VM 中验证后冻结；不能把当前在线内核文档的新接口当作 Ubuntu 现有能力。
 
-本次只读核查发现本地 Python 指向 3.9.4，VS Code 和上述扩展已安装，VMware 已有 Ubuntu 和 openEuler 登记。Ubuntu VM 配置为 2 vCPU、4 GB RAM；这些是核查时的配置及缓存信息，不是 guest 内实际验证结果。可以先用现有 VM 做功能测试；稳定性能测试应单独记录 CPU/内存/磁盘和背景负载。
+2026-11-23 的历史只读核查发现本地 Python 指向 3.9.4，VS Code 和上述扩展已安装，VMware 已有 Ubuntu 和 openEuler 登记。Ubuntu VM 配置为 2 vCPU、4 GB RAM；这些是核查时的配置及缓存信息，不是 guest 内实际验证结果。可以先用现有 VM 做功能测试；稳定性能测试应单独记录 CPU/内存/磁盘和背景负载。
 
 ## 两类 VS Code 窗口
 
@@ -44,3 +44,7 @@ Ubuntu 用于首轮开发与完整闭环；openEuler 单独记录内核、BTF、
 - [Python venv](https://docs.python.org/3.12/library/venv.html)
 - [Linux BPF LSM](https://docs.kernel.org/bpf/prog_lsm.html)
 - [Linux LSM 配置](https://docs.kernel.org/admin-guide/LSM/index.html)
+
+## 规范化与路径检查
+
+B 本机指定工作副本为 `C:\Users\cm191\Documents\GitHub\GateGuard`；后续本机修改在此进行，其他成员与 VM 各用自己的副本，软件不写死此路径。离线加工按 08/12 保留 Linux 原始路径、对象和时钟语义；Windows realpath 不能验证 Linux 链接与对象身份。正式数据以契约 3.1 封包，完整 specs 与 run 载荷随包校验。

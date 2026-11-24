@@ -1,30 +1,30 @@
 # GateGuard Agent 提示词 B 策略与学习工具
 
-> 文档与契约版本 3.0，2026-11-23。
+> 文档与契约版本 3.1，2026-11-24。
 
 ## 共同目标与执行环境
 
-GateGuard 是面向电力边缘服务的可解释权限策略学习、防护与可验证恢复系统。业务价值是帮助人配置较小权限、限制服务出错/被利用后的越权影响，并核验事故恢复及合法数据损失。主要研究是规则归纳与验证收紧，当前不预设神经网络。
+GateGuard 是面向电力边缘服务的 Linux 文件权限策略生成、访问控制与可验证恢复工具，定位于操作系统应用开发赛道的系统工具方向。主要解决服务文件权限配置与维护困难、收紧代价缺少验证依据、损坏恢复结果难核验三个问题。通过业务职责与正常行为证据生成候选策略，以真实内核拒绝和恢复证据验证价值；不把电压异常当越权。
 
 比赛按三人协作组织：A/B/C 是三名参赛成员，组长是其中一人。D/E/F 仅为辅助数据准备任务编号，任务目录不代表新增参赛成员；辅助来源与实际贡献按事实记录并按当届要求披露。
 
-ABC 实现项目与工具；DEF 准备、采集和整理数据；组长实际运行策略学习、选择参数、审核策略并分析最终实验。C 负责模拟网关程序，D 提供业务输入和正常场景，禁止继续把网关开发混分给 D。
+ABC 实现项目与工具；B 负责策略研究设计、实现与实验方案，组长组织运行、审定参数/发布及最终结论，两者可由同一人承担。D/E/F 为三项辅助数据任务，按 12 准备、采集、质检和整理。C 负责模拟网关、可信主体/资源映射，D 不承担网关主体开发。
 
 Windows VS Code + 本地 Python 3.12 用于数据与离线学习；Remote-SSH + Ubuntu 24.04 VM 用于 Linux/C/BPF、业务采集和系统实验。后续再验证 openEuler。Linux-only 功能在 Windows 返回 PLATFORM_UNSUPPORTED，纯 Python 模块不在导入时依赖 Linux 包；两边不共用 venv。正式能力以 VM 内实际探测为准。
 
 主线 BPF LSM 内核同步裁决，用户态学习/编译和处理审计；fanotify 兼容版只支持 open 语义。后端不支持规则必须报错，不静默放宽。权限内损坏可能不产生 deny，恢复单独触发；恢复先确认合成数据已变化，隔离、留证、停服、释放引用、切卷、重建保护，再重启校验。
 
-比较人工职责、精确汇总和业务分区归纳收紧三组策略，验证解释、额外授权与正常任务完成率。电力特色体现在采集、配置维护和报表的职责分离与恢复损失验证。界面统一深蓝/青色、中文文字状态，按“立规矩、守边界、恢业务”展示真实证据。课程和竞赛共同交付清单见 00。
+比较人工职责、精确汇总、简单目录归纳和自研约束归纳收紧四种实验配置，知识输入与执行语义如实披露。电力特色落实在采集/报表/维护职责、生命周期和合法数据损失验证；成熟系统机制不单独算创新。B 的具体搜索、评分、权重和阈值待后续算法讨论。界面深蓝/青色、中文状态，围绕“立规矩、守边界、恢业务”。
 
 ## 开工前必须阅读
 
-将整个 Markdown 提示词目录同步到代码仓库，按顺序读取：`00_协作入口与统一约定.md`、`08_接口与数据契约.md`、`09_Windows_Ubuntu实验与启动检查.md`、本角色提示词及 `07_开源参考与复用清单.md` 对应条目；再读已有代码文档。分发所需约定均在本目录，介绍书可作扩展背景，不作为启动依赖。文件是设计约定，不代表已实现。复制本提示词给 agent 时也提供这些公共文件。
+将整个 Markdown 提示词目录同步到代码仓库，先读 00、08、11 业务与权限依据、12 数据交接规范、09 环境，再读本角色与 07 对应条目；这些文件均在当前目录。介绍书为扩展背景，不是分发启动依赖。文件均为待实现约定，保留未测/不支持状态。
 
 仓库为 `https://github.com/Ming49Rui/GateGuard`，集成基线为 `main`，工作分支从当前工作副本识别并按团队安排使用。缺初始化文件按所有权创建或提案，不因骨架尚不存在反复追问。共享工作树不擅自切换、提交、推送或覆盖他人；明确建立独立工作树后再按团队流程使用。
 
 ## 共享契约和所有权
 
-契约唯一基线为 08，schema_version 为 `3.0`。模式为 learning/permissive/enforcing；标签为 normal/violation/boundary/recovery；结果为 success/failed/unknown；裁决为 allow/deny/would_deny/unsupported。open 意图不等于实际写成功，LSM allow 不等于 syscall 成功。缺少跨流关联保留 null，不靠 PID 与时间接近伪造关联。
+契约唯一基线为 08，schema_version 为 `3.1`。模式为 learning/permissive/enforcing；标签为 normal/violation/boundary/recovery；结果为 success/failed/unknown；裁决为 allow/deny/would_deny/unsupported。open 意图不等于实际写成功，LSM allow 不等于 syscall 成功。缺少跨流关联保留 null，不靠 PID 与时间接近伪造关联。
 
 B 独占 contracts/、policy/、store/、guard/decision.py 与共享 Schema/接口实现文档；A 管 collector/、BPF、其余 guard/ 和 cgroup 原语；C 管模拟业务、response/、web/、cli、根依赖与部署；D/E 管各自场景输入和 raw 采集包；F 管 processed/splits 和数据质检工具。任何跨所有权修改先在 `docs/notes/<角色>-proposal.md` 提案；接口变更由 B 整理并交组长确认版本，根依赖由 C 汇总。
 
@@ -32,7 +32,7 @@ B 独占 contracts/、policy/、store/、guard/decision.py 与共享 Schema/接�
 
 ## 并行工作和联调关口
 
-G0 约定与环境：A 探测、B 共享模型、C 工程与业务骨架，DEF 先做输入/场景/质检 fixture；G1 小批真实业务与采集包可被组长/B 使用；G2 组长在 Windows 学习、A/B 在 Ubuntu 执行、C 验证正常业务；G3 独立损坏与停服恢复；G4 冻结测试、组织对照消融、迁移和交付。
+G0 并行确认 11 的主体/资源/授权规格与粗粒度约束首版，A 探测、B 模型/fixture、C 工程与身份/业务骨架，DEF 按 12 准备输入/场景/质检；G1 小批真实包准入后扩大；G2 Windows 学习、Linux 编译安装与正常业务；G3 独立损坏恢复；G4 冻结对照/消融、迁移与交付。
 
 各人可同时开工；G1 通过前不批量采集，G2 通过前不宣称精细保护完成。fixture 只验证管道，不算真实内核、恢复或性能验收。组长决定训练方法、参数与最终结论，ABC 提供工具和机制说明，DEF 提供可信数据。
 
@@ -48,18 +48,20 @@ G0 约定与环境：A 探测、B 共享模型、C 工程与业务骨架，DEF �
 
 ## 你的职责和文件
 
-实现 src/gateguard/contracts/、policy/、store/、guard/decision.py，schemas/、对应关键测试、docs/data-contract.md、interfaces.md、policy.md，以及供组长使用的学习配置示例。根依赖由 C 汇总。你负责把工具实现好，组长负责实际运行、调参、审核和最终方法选择。
+实现 src/gateguard/contracts/、policy/、store/、guard/decision.py，schemas/、对应关键测试、docs/data-contract.md、interfaces.md、policy.md，以及供组长使用的学习配置示例。根依赖由 C 汇总。你同时负责研究设计、方法实现与实验方案，组长组织运行、审定参数/发布与最终结论；两种职责可由同一人承担。
 
 ## 开发任务
 
-1. 第一交付为 08 的 schema 3.0、共享 Python 模型、完整 fixture 和校验函数；所有核心 ID、时间/结果语义、null、错误码、数据包和返回类型可测试。保留 Event 原始事实，禁止按 Windows 路径规则改写 Linux path。
-2. 将离线学习和 Linux 后端编译解耦。Windows 能导入 contracts/policy 并运行 learn/explain/validate_replay，不依赖 BPF/cgroup 包或 root；Linux 编译使用 Capabilities 与当前 Bindings，不把采集时旧 PID/inode 直接写入策略。
-3. 实现 Policy.learn(dataset_dir,config,output_dir)，只读 train normal，输出高层 profile、参数、输入 hashes、解释和学习报告。实现人工职责、精确汇总、业务分区归纳收紧三种 method 及可复现消融开关。
-4. 规则保留主体/逻辑资源/动作、来源 run/event、业务阶段、低频核验与独立验证。候选通配必须受分区和后端语义约束，不能自动把低频权限删掉或把所有日期数字改成任意通配。
-5. validate_replay 只报告离线覆盖，不声称业务真实通过。给 C 提供需运行的正常验证清单；来源解释可显示移除/扩大规则的观察影响。没有人工审核实验不报告审核效率提升。
-6. 与 A 冻结 bundle ABI，Policy.compile 对不支持动作/模式返回 rule_id 诊断，不静默放宽。实现 candidate/validated/approved/installed 生命周期；异常只生成候选变更，组长审核后验证发布。
-7. SQLite 单写、WAL、busy_timeout、索引和一致导出；C 的面板通过只读查询与受控动作调用。恢复、模式、审批的记录符合统一契约。
-8. 提供组长操作说明：Python 解释器、输入目录、参数意义、输出内容、错误定位、如何比较方法及回传 profile。最终训练集、方法和参数由组长确认，你不得替其使用冻结 test 调参。
+1. G0 先与 C 核对 11 的模拟业务、主体和资源布局，D/E 提交必要需求与反例，汇总 BusinessSpec/LearningConstraints/资源与主体目录。将待确认假设与批准规格分开，不能用运行成功直接证明授权。
+2. 发布 08 的 schema 3.1 共享模型、JSON Schema、完整 fixture 与校验函数，含规范引用、Outcome、NormalizedEvent、学习/评测视图和错误码。fixture 明确标记，不算真实系统证据；不能只把 3.0 版本字符串改掉。
+3. 负责研究问题、候选方法与实验方案：在职责/能力约束下平衡业务覆盖、额外授权和规则复杂度。具体搜索、评分函数、权重、阈值及最终算法留待组长/B 的算法讨论，不在本轮文档方案中预设最优解。
+4. Policy.learn 只加载 learning-view 中准入 normal train、资源目录和粗粒度约束；正常 validation 只供验证/选参。实现 manual/exact/grouped 接口，grouped 用显式配置区分简单目录归纳与自研方法，知识输入和消融开关留痕。完整 test 真值、development 反例不参与候选生成。
+5. 保留主体—逻辑资源—动作、来源 run/event、阶段与低频必要性证据。提出有界 exact/directory 候选，不自动将日期/数字换成任意通配，不跨业务分区，不自动删除低频权限。对成功但冲突已知职责的记录报警而非授权。
+6. 定义并输出覆盖、授权扩张、规则复杂度与收紧影响，区分已知硬约束符合性和可选择范围内的归纳代价。额外授权仅按预先固定的有限清单报告；算法不得借用该清单的冻结 test 预期优化规则。没有实测改进如实报告。
+7. explain 提供来源与规则增删影响；validate_replay 只报告离线覆盖，并交 C 正常 Linux 验证清单。解释完整/正确率独立评估，不能把关闭解释呈现当成权限安全消融，没有人工实验不报告审核效率提升。
+8. Windows 可导入 contracts/policy/store 的离线部分，不依赖 BPF/cgroup/root。Linux compile 使用当前 Capabilities/Bindings，与 A 冻结 ABI，动作、目录深度或版本无法表达时返回含 rule_id 的诊断，禁止静默放宽和固化旧 PID/inode。
+9. 实现 candidate/validated/approved/installed 生命周期；安装后还需 C 真实正常业务验证。异常仅提供待审核候选，不自动白名单化。SQLite 单写、WAL、busy_timeout、索引、一致导出与只读查询按契约供 C 调用。
+10. 提供可复现配置、输入 hash、来源解释、对照说明与 handoff。根依赖交 C 汇总，F 负责派生数据实现；B 定义共享语义和关键校验，不复制 F 的数据管道。组长组织运行与最终决策，B 对研究设计和方法实现负责。
 
 ## 明确参考这些代码
 
@@ -70,6 +72,6 @@ G0 约定与环境：A 探测、B 共享模型、C 工程与业务骨架，DEF �
 
 ## 本角色验收
 
-G0：共享契约能被 A/C/DEF 使用；G1：读取第一批真实数据并排出质量问题；G2：组长能在 Windows 独立运行学习，输出不带本机绝对路径或旧 kernel binding，回传后 A/B 实际判定一致。候选规则来源可追溯，不支持规则可见，安装失败不半更新。
+G0：业务规格/学习约束的输入边界明确，共享契约 3.1 与两种视图能被 A/C/DEF 使用；G1：读取第一批真实数据并排出质量问题；G2：组长能在 Windows 独立运行学习，输出不带本机绝对路径或旧 kernel binding，回传后 A/B 实际判定一致。候选规则来源可追溯，不支持规则可见，安装失败不半更新。
 
 交 A：bundle/策略语义；交 C：稳定 Python API、参数与存储接口；交 DEF：Schema/fixture/数据要求；交组长：可运行学习工具与报告，不把未经执行的算法当成已有效。
